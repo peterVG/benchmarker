@@ -4,7 +4,7 @@ This localized checklist dictates the implementation flow for the Backend module
 
 ## Phase 1: Foundational Database & Ingestion
 
-- [ ] **Task B-1.1: Initialize SQLite Database & Schema**
+- [x] **Task B-1.1: Initialize SQLite Database & Schema**
   - **Description:** Implement the base data layer to durably store telemetry and metrics. Configure the `data/` directory.
   - **Estimated Time:** 2 hours
   - **Dependencies:** None
