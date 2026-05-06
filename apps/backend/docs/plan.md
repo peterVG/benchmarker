@@ -37,3 +37,11 @@ This localized checklist dictates the implementation flow for the Backend module
   - **Related Requirements:** [SRS-BENCH-003](../../docs/srs.md)
   - **Related Tests:** [`metric_collection_SRS-BENCH-003.feature`](../tests/features/metric_collection_SRS-BENCH-003.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task B-2.2. Then begin development within apps/backend/. Calculate the required performance and accuracy metrics. Invoke the @feature-writer skill for BDD testing. Upon completion, generate apps/backend/docs/tasks/Task-B-2.2-Walkthrough.md referencing the SRS, delete any scratchpads, check off the Markdown box locally in the appropriate docs/plan.md files, commit your changes, and push the branch to origin.`
+
+- [ ] **Task B-2.3: Backend Orchestration API**
+  - **Description:** Create a REST/WebSocket API (e.g., FastAPI) to expose the execution harness to the frontend. It must accept configuration commands (Model, Dataset), trigger runs, and stream the embedded Ollama daemon's stdout/stderr logs.
+  - **Estimated Time:** 3 hours
+  - **Dependencies:** Task B-2.2
+  - **Related Requirements:** F-006, F-007
+  - **Related Tests:** [`orchestration_api_SRS-BENCH-006.feature`](../tests/features/orchestration_api_SRS-BENCH-006.feature)
+  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task B-2.3. Develop a lightweight API in apps/backend/ to orchestrate runs based on UI input and stream daemon logs. Generate the BDD tests and Walkthrough upon completion.`

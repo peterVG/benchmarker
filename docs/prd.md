@@ -1,16 +1,16 @@
 # Project Requirements Document: Benchmarker
 
 # Executive Summary
-Benchmarker is a lightweight, automated benchmarking harness designed to batch-test local AI models (specifically for OCR and text classification) across diverse hardware profiles. It evaluates system performance and model accuracy, outputting presentation-ready reports.
+Benchmarker is an automated benchmarking harness designed to batch-test local AI models across diverse hardware profiles. It features an interactive Control Dashboard allowing users to dynamically configure runs, evaluate system performance, and monitor real-time execution logs.
 
 # Product Vision
-Benchmarker solves the problem of manual, non-reproducible local AI testing by providing an automated benchmarking pipeline with persistent reporting.
+Benchmarker solves the problem of manual, non-reproducible local AI testing by providing a unified interface to configure dataset pipelines, execute model benchmarking locally, and persistently track metrics and logs.
 
 ## Problem Statement
-AI developers need to evaluate different local AI models for OCR and text classification across different hardware architectures (e.g., Apple Silicon and Nvidia DGX). Current UI-based tools (like Open WebUI) are designed for interactive chat, making automated batch-testing, accuracy evaluation against ground truth, and metric tracking tedious, manual, and non-reproducible.
+AI developers need to evaluate different local AI models for OCR and text classification across different hardware architectures. Current UI-based tools are designed for interactive chat, making automated batch-testing, accuracy evaluation against ground truth, and metric tracking tedious, manual, and non-reproducible.
 
 ## Target Users
-Solo AI developer/engineer prioritizing automated dataset pipelines, precise metric tracking, and exportable data visualizations over a polished consumer user interface.
+AI developers/engineers prioritizing automated dataset pipelines, precise metric tracking, exportable data visualizations, and full control over local execution environments through an integrated control dashboard.
 
 # Functional Requirements
 
@@ -48,16 +48,31 @@ Solo AI developer/engineer prioritizing automated dataset pipelines, precise met
 
 ## F-005: Presentation-Ready Reporting
 **Priority:** Mandatory
-**User Story:** As an AI developer, I want to view my test results via a simple HTML pager so that I can easily browse historical runs and export graphs for presentations.
+**User Story:** As an AI developer, I want to view my test results via a dashboard so that I can easily browse historical runs and export graphs for presentations.
 ### Acceptance Criteria
 - System generates an HTML report or dashboard from SQLite data.
 - Includes graphical representations of performance and accuracy metrics.
 *(Source: docs/product-vision.md)*
 
+## F-006: Benchmark Configuration UI
+**Priority:** Mandatory
+**User Story:** As an AI developer, I want a starting point UI to select my benchmarking parameters so that I can quickly orchestrate runs without modifying scripts.
+### Acceptance Criteria
+- User can select the AI harness (e.g., embedded Ollama).
+- User can specify the AI model to be benchmarked (e.g., Gemma, Qwen).
+- User can select a HuggingFace dataset from the local cache or search online repositories directly from the UI.
+
+## F-007: Execution Observability UI
+**Priority:** Mandatory
+**User Story:** As an AI developer, I want to track and recall daemon logs directly in the app so that I can debug inference issues.
+### Acceptance Criteria
+- The UI tracks, stores, and recalls Ollama logging (stdout, stderr).
+- The implementation adheres to the project's centralized observability rules (routing streams appropriately).
+
 ## Technology Stack
-- **Frontend:** HTML Pager/Dashboard
-- **Backend:** Python (with HuggingFace `datasets`) and Ollama execution layer
-- **Storage:** SQLite
+- **Frontend:** Interactive HTML Dashboard (Vite/Vanilla JS or framework as decided)
+- **Backend:** Python (with HuggingFace `datasets`) and an embedded Ollama execution layer (managed programmatically by the script).
+- **Storage:** SQLite and local file cache (`models/` directory for Ollama models).
 
 # Non-Functional Requirements
 
@@ -75,7 +90,7 @@ Solo AI developer/engineer prioritizing automated dataset pipelines, precise met
 
 ## NFR-004: Scale-to-Zero
 **Requirement:** The benchmarking script and reporting tool consume zero active resources when not running.
-**Rationale:** No always-on services (other than the base Ollama daemon).
+**Rationale:** No always-on services. The embedded Ollama daemon is strictly started and stopped as part of the benchmark run lifecycle.
 
 # Technical Constraints
 
@@ -99,7 +114,7 @@ Solo AI developer/engineer prioritizing automated dataset pipelines, precise met
 
 # AGENTS.md Principles Integration
 
-- **Minimize Dependencies → Feature Simplicity:** Uses standard Python, SQLite, and Ollama.
+- **Minimize Dependencies → Feature Simplicity:** Uses standard Python, SQLite, and an embedded Ollama binary.
 - **Scale-to-Zero → Performance Requirements:** Tool is an on-demand script/pager, no persistent server overhead.
-- **Zero-Friction Setup:** SQLite database requires no manual initialization.
-- **Local-First:** All data remains on the user's machine.
+- **Zero-Friction Setup:** SQLite database requires no manual initialization. Ollama binary and requested models are automatically downloaded and cached locally upon first run.
+- **Local-First:** All data remains on the user's machine, including cached LLM weights in the `models/` directory.

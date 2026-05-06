@@ -19,6 +19,8 @@ The script MUST iterate through the ingested dataset and query the local Ollama 
 
 **Technical Implementation:**
 - Execute HTTP POST requests to `http://localhost:11434/api/generate` to interface with the local Ollama daemon.
+- The script MUST manage the lifecycle of an embedded Ollama daemon (start/stop) during the benchmarking session.
+- The daemon MUST be configured (e.g. via `OLLAMA_MODELS` env var) to download and cache local models into the root `models/` directory to prevent reloading and keep the project self-contained.
 
 **Source**
 - `[prd.md](./prd.md)` F-002 Batch Model Execution Harness
@@ -90,7 +92,7 @@ The application MUST use lightweight, mainstream tools. The database MUST use SQ
 - `[prd.md](./prd.md)` TC-002 SQLite Datastore
 
 **Tests**
-- Validated by the absence of background daemon services (except Ollama) in the `docker-compose.yml` or installation scripts.
+- Validated by the absence of background daemon services in the `docker-compose.yml` or installation scripts (the embedded Ollama daemon is only active during test execution).
 
 ## 3. Traceability Summary Matrix
 
