@@ -28,7 +28,14 @@ class DatasetIngestionError(Exception):
 
 class DatasetManager:
     def __init__(self, cache_dir: Optional[str] = None):
-        self.cache_dir = cache_dir
+        from pathlib import Path
+        if cache_dir is None:
+            # File is at apps/backend/app/modules/ingestion/dataset_manager.py
+            # Root is 5 levels up from the directory containing this file
+            root_dir = Path(__file__).resolve().parents[5]
+            self.base_cache_dir = root_dir / "data"
+        else:
+            self.base_cache_dir = Path(cache_dir)
 
     def load_dataset_split(self, dataset_name: str, split: str = "train") -> Any:
         """
@@ -46,8 +53,11 @@ class DatasetManager:
             if load_dataset is None:
                 raise ImportError("datasets library is not installed")
                 
+            safe_name = dataset_name.replace("/", "_")
+            dataset_cache_dir = str(self.base_cache_dir / safe_name)
+            
             # Using datasets library to load. This handles downloading and caching.
-            dataset = load_dataset(dataset_name, split=split, cache_dir=self.cache_dir)
+            dataset = load_dataset(dataset_name, split=split, cache_dir=dataset_cache_dir)
             logger.info(f"Successfully loaded dataset '{dataset_name}'")
             return dataset
         except DatasetNotFoundError as e:
