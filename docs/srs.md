@@ -14,13 +14,14 @@ The system MUST download and format standard HuggingFace document datasets (e.g.
 **Tests**
 - [`dataset_ingestion_SRS-BENCH-001.feature`](../apps/backend/tests/features/dataset_ingestion_SRS-BENCH-001.feature)
 
-### SRS-BENCH-002: Batch Model Execution Harness
-The script MUST iterate through the ingested dataset and query the local Ollama API to execute vision/language models. The harness MUST support swapping out different local models via configuration.
+### SRS-BENCH-002: Pluggable Model Execution Harness
+The script MUST iterate through the ingested dataset and query the active AI model runner's local API to execute vision/language models. The harness MUST support swapping out different local models and execution runners (e.g., Ollama, vLLM, llama.cpp) via configuration.
 
 **Technical Implementation:**
-- Execute HTTP POST requests to `http://localhost:11434/api/generate` to interface with the local Ollama daemon.
-- The script MUST manage the lifecycle of an embedded Ollama daemon (start/stop) during the benchmarking session.
-- The daemon MUST be configured (e.g. via `OLLAMA_MODELS` env var) to download and cache local models into the root `models/` directory to prevent reloading and keep the project self-contained.
+- The system MUST define an abstract `AIRunner` interface to allow seamless switching between different backend execution strategies.
+- Execute HTTP requests to the respective local runner API (e.g., `http://localhost:11434/api/generate` for Ollama).
+- The script MUST manage the lifecycle of the embedded AI runner daemon (start/stop) during the benchmarking session.
+- The daemon MUST be configured to download and cache local models into the root `models/` directory, and binaries into the root `bin/` directory, to keep the project self-contained.
 
 **Source**
 - `[prd.md](./prd.md)` F-002 Batch Model Execution Harness
@@ -92,7 +93,7 @@ The application MUST use lightweight, mainstream tools. The database MUST use SQ
 - `[prd.md](./prd.md)` TC-002 SQLite Datastore
 
 **Tests**
-- Validated by the absence of background daemon services in the `docker-compose.yml` or installation scripts (the embedded Ollama daemon is only active during test execution).
+- Validated by the absence of background daemon services in the `docker-compose.yml` or installation scripts (the embedded AI runner daemons are only active during test execution).
 
 ## 3. Traceability Summary Matrix
 

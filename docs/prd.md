@@ -24,10 +24,10 @@ AI developers/engineers prioritizing automated dataset pipelines, precise metric
 
 ## F-002: Batch Model Execution Harness
 **Priority:** Mandatory
-**User Story:** As an AI developer, I want to run batches of documents through local vision/language models via Ollama so that I can evaluate them efficiently.
+**User Story:** As an AI developer, I want to run batches of documents through local vision/language models via a pluggable AI runner (e.g., Ollama, vLLM, llama.cpp) so that I can evaluate them efficiently using the best execution engine for my hardware.
 ### Acceptance Criteria
-- Script can iterate through a dataset and query the local Ollama API.
-- Harness supports swapping out different local models via configuration.
+- Script can iterate through a dataset and query the local API of the active AI model runner.
+- Harness supports downloading and swapping out different AI model runners (Ollama, vLLM, etc.) and their respective models via configuration.
 *(Source: docs/product-vision.md)*
 
 ## F-003: Metric Collection Engine
@@ -58,21 +58,21 @@ AI developers/engineers prioritizing automated dataset pipelines, precise metric
 **Priority:** Mandatory
 **User Story:** As an AI developer, I want a starting point UI to select my benchmarking parameters so that I can quickly orchestrate runs without modifying scripts.
 ### Acceptance Criteria
-- User can select the AI harness (e.g., embedded Ollama).
-- User can specify the AI model to be benchmarked (e.g., Gemma, Qwen).
+- User can select the AI harness (e.g., Ollama, vLLM).
+- User can specify the AI model to be benchmarked.
 - User can select a HuggingFace dataset from the local cache or search online repositories directly from the UI.
 
 ## F-007: Execution Observability UI
 **Priority:** Mandatory
 **User Story:** As an AI developer, I want to track and recall daemon logs directly in the app so that I can debug inference issues.
 ### Acceptance Criteria
-- The UI tracks, stores, and recalls Ollama logging (stdout, stderr).
+- The UI tracks, stores, and recalls logging (stdout, stderr) from the active AI model runner daemon.
 - The implementation adheres to the project's centralized observability rules (routing streams appropriately).
 
 ## Technology Stack
 - **Frontend:** Interactive HTML Dashboard (Vite/Vanilla JS or framework as decided)
-- **Backend:** Python (with HuggingFace `datasets`) and an embedded Ollama execution layer (managed programmatically by the script).
-- **Storage:** SQLite and local file cache (`models/` directory for Ollama models).
+- **Backend:** Python (with HuggingFace `datasets`) and an embedded, pluggable AI execution layer (managed programmatically by the script).
+- **Storage:** SQLite and local file cache (`models/` and `bin/` directories for runners and weights).
 
 # Non-Functional Requirements
 
@@ -85,12 +85,12 @@ AI developers/engineers prioritizing automated dataset pipelines, precise metric
 **Rationale:** Ensures data privacy and sovereignty; complies with local-first principles.
 
 ## NFR-003: Minimal Dependencies
-**Requirement:** Use lightweight, mainstream tools (Python, SQLite, Ollama) and avoid heavy UI frameworks or complex external databases.
+**Requirement:** Use lightweight, mainstream tools (Python, SQLite) and avoid heavy UI frameworks or complex external databases. AI model runners must be managed as embedded binaries or local environments rather than system-wide dependencies.
 **Rationale:** Reduces setup friction and ensures the tool remains a lightweight harness rather than a bloated application.
 
 ## NFR-004: Scale-to-Zero
 **Requirement:** The benchmarking script and reporting tool consume zero active resources when not running.
-**Rationale:** No always-on services. The embedded Ollama daemon is strictly started and stopped as part of the benchmark run lifecycle.
+**Rationale:** No always-on services. The embedded AI model runners are strictly started and stopped as part of the benchmark run lifecycle.
 
 # Technical Constraints
 
@@ -105,7 +105,7 @@ AI developers/engineers prioritizing automated dataset pipelines, precise metric
 # Release Criteria
 
 ## RC-001: End-to-End Benchmark Run
-**Criteria:** The system successfully ingests a sample HuggingFace dataset, runs it against an Ollama model, and records the metrics in SQLite.
+**Criteria:** The system successfully ingests a sample HuggingFace dataset, downloads the selected AI runner, runs it against a model, and records the metrics in SQLite.
 **Verification:** Manual execution of the script and verification of SQLite database contents.
 
 ## RC-002: Report Generation
@@ -114,7 +114,7 @@ AI developers/engineers prioritizing automated dataset pipelines, precise metric
 
 # AGENTS.md Principles Integration
 
-- **Minimize Dependencies → Feature Simplicity:** Uses standard Python, SQLite, and an embedded Ollama binary.
+- **Minimize Dependencies → Feature Simplicity:** Uses standard Python, SQLite, and embedded AI binaries.
 - **Scale-to-Zero → Performance Requirements:** Tool is an on-demand script/pager, no persistent server overhead.
-- **Zero-Friction Setup:** SQLite database requires no manual initialization. Ollama binary and requested models are automatically downloaded and cached locally upon first run.
-- **Local-First:** All data remains on the user's machine, including cached LLM weights in the `models/` directory.
+- **Zero-Friction Setup:** SQLite database requires no manual initialization. AI runners and requested models are automatically downloaded and cached locally upon first run.
+- **Local-First:** All data remains on the user's machine, including cached LLM weights and runner binaries.

@@ -22,7 +22,7 @@ This document outlines the step-by-step implementation plan for the Benchmarker 
 
 ## Phase 2: Execution & Metric Engines (Backend)
 
-- [ ] **Task 2.1: Ollama Batch Execution Harness**
+- [x] **Task 2.1: Ollama Batch Execution Harness**
   - **Description:** Write the core iteration logic to pass formatted dataset items to the local Ollama API via REST HTTP calls. Include error handling for unpulled models or daemon crashes.
   - **Estimated Time:** 3 hours
   - **Dependencies:** Task 1.2
