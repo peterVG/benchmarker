@@ -12,7 +12,7 @@ This document outlines the step-by-step implementation plan for the Benchmarker 
   - **Related Tests:** [`persistent_storage_SRS-BENCH-004.feature`](../apps/backend/tests/features/persistent_storage_SRS-BENCH-004.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 1.1. Then begin development within apps/backend/ keeping in mind ADR 006. Additionally, invoke the @feature-writer skill to translate SRS requirements into executable BDD feature tests. Upon completion, YOU MUST generate apps/backend/docs/tasks/Task-1.1-Walkthrough.md directly in the project repository with clear SRS mapping (including BOTH the ID and full human-readable title text) in heading position 2 exclusively, and strictly delete any internal tracking Plan/ToDos documents before checking off the Markdown box locally in the appropriate docs/plan.md files. Then commit your changes and push the branch to origin.`
 
-- [ ] **Task 1.2: Implement HuggingFace Dataset Ingestion**
+- [x] **Task 1.2: Implement HuggingFace Dataset Ingestion**
   - **Description:** Implement the `datasets` wrapper to download and format industry benchmarks (e.g., RVL-CDIP, FUNSD) locally.
   - **Estimated Time:** 2 hours
   - **Dependencies:** Task 1.1
