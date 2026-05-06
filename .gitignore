@@ -1,0 +1,10 @@
+.env
+.venv
+
+data/*
+!data/README.md
+
+.DS_Store
+**/.DS_Store
+**/.*.DS_Store*
+.!*

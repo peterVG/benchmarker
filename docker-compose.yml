@@ -1,0 +1,107 @@
+services:
+  # ----------------------------------------------------
+  # Distributed Datastores
+  # ----------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: dev_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - TZ=UTC
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./data/postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: dev_elastic
+    environment:
+      - TZ=UTC
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./data/es_data:/usr/share/elasticsearch/data
+
+  # ----------------------------------------------------
+  # Centralized Event Streaming / Observability
+  # ----------------------------------------------------
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.2.2
+    environment:
+      - TZ=UTC
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr 0.0.0.0:8082
+      - --advertise-pandaproxy-addr localhost:8082
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+      - "9092:9092"
+      - "29092:29092"
+    volumes:
+      - ./data/redpanda_data:/var/lib/redpanda/data
+
+  loki:
+    image: grafana/loki:3.3.2
+    environment:
+      - TZ=UTC
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./data/loki_data:/loki
+      - ./config/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+
+  promtail:
+    image: grafana/promtail:3.3.2
+    environment:
+      - TZ=UTC
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/var/log
+      - ./config/promtail/docker-config.yaml:/etc/promtail/docker-config.yaml:ro
+    command: -config.file=/etc/promtail/docker-config.yaml
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    environment:
+      - TZ=UTC
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./data/prometheus_data:/prometheus
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      - TZ=UTC
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data/grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+      - prometheus
