@@ -1,10 +1,10 @@
 # About this project
 
-Benchmarker is a lightweight, automated benchmarking harness designed to batch-test local AI models (specifically for OCR and text classification) across diverse hardware profiles (such as Apple Silicon and Nvidia architectures). 
+Benchmarker is a lightweight, automated benchmarking harness designed to batch-test local AI models (specifically for OCR and text classification) across diverse hardware profiles. 
 
-It replaces manual, non-reproducible testing flows by providing an automated pipeline. According to the [Software Requirements Specification (SRS)](docs/srs.md), the system automatically ingests standard industry datasets like RVL-CDIP and FUNSD via the [HuggingFace datasets library](docs/architecture/007-use-huggingface-datasets.md). The backend orchestrates batch inference exclusively against [local Ollama daemons](docs/architecture/005-use-ollama-for-execution.md) to ensure data privacy and cross-platform compatibility without cloud dependencies.
+It replaces manual, non-reproducible testing flows by providing an automated pipeline. According to the [Software Requirements Specification (SRS)](docs/srs.md), the system automatically ingests standard industry datasets like RVL-CDIP and FUNSD via the [HuggingFace datasets library](docs/architecture/007-use-huggingface-datasets.md). The backend orchestrates batch inference exclusively against a **Pluggable AI Runner Architecture** (e.g., Ollama, vLLM, llama.cpp), which dynamically downloads and manages local execution daemons to ensure data privacy and cross-platform compatibility without cloud dependencies.
 
-As tests run, the harness collects detailed system metrics (latency, time to first token, VRAM usage) and calculates OCR/Classification accuracy against ground-truth labels. To comply with scale-to-zero and local-first architectures, all test telemetry is durably persisted into a serverless [SQLite database](docs/architecture/006-use-sqlite-for-datastore.md). Finally, a dedicated Vanilla JS frontend queries this SQLite database to generate presentation-ready HTML reports containing historical performance charts and accuracy comparisons. The behavior of the entire system is strictly verified against BDD scenarios defined in the repository's `tests/features/` folders.
+As tests run, the harness collects detailed system metrics (latency, time to first token, VRAM usage) and calculates OCR/Classification accuracy against ground-truth labels. To comply with scale-to-zero and local-first architectures, all test telemetry is durably persisted into a serverless [SQLite database](docs/architecture/006-use-sqlite-for-datastore.md). Finally, an interactive dashboard orchestrates these runs, streams live execution logs, and presents historical accuracy comparisons. The behavior of the entire system is strictly verified against BDD scenarios defined in the repository's `tests/features/` folders.
 
 # Setup Development Environment
 
@@ -13,16 +13,43 @@ We recommend using a version manager like [mise](https://mise.jdx.dev/), [asdf](
 - Python: >=3.12
 - Node.js: >=20
 
-## Run the application
+### Initializing the Backend
+The backend utilizes standard Python tools. Set up your virtual environment and install the required dependencies:
+
+```bash
+cd apps/backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Run the application manually
+To verify the Pluggable AI Runner architecture and auto-installer logic manually:
+
+1. Ensure your virtual environment is activated (`source apps/backend/.venv/bin/activate`).
+2. Open a Python REPL from the project root:
+```bash
+python
+```
+3. Test the OllamaRunner installation and start process:
+```python
+from apps.backend.app.modules.execution.runners.ollama_runner import OllamaRunner
+
+# This will auto-download the Ollama binary to /bin and start the daemon
+with OllamaRunner() as runner:
+    print("Version installed:", runner.get_version())
+    print("Checking if llama3 model exists locally:", runner.check_model("llama3"))
+    # If you want to pull a small model to test: runner.pull_model("qwen:0.5b")
+```
 
 ## Run tests
 
-### Backend (Python)
-To run the backend test suite, use `pytest`. Ensure you run it from within the `apps/backend/` directory with your virtual environment activated:
+### Backend (Python) BDD Tests
+The system uses `behave` for BDD testing rather than standard pytest. Ensure you run it from within the `apps/backend/` directory with your virtual environment activated:
 ```bash
 cd apps/backend
 source .venv/bin/activate
-pytest
+behave tests/features/
 ```
 To generate the Allure report:
 ```bash
