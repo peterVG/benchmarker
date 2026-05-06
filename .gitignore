@@ -8,3 +8,30 @@ data/*
 **/.DS_Store
 **/.*.DS_Store*
 .!*
+
+# Test reports & artifacts
+**/artifacts/
+**/playwright-report/
+**/allure-results/
+**/coverage/
+
+# Dependency directories
+node_modules/
+**/node_modules/
+__pycache__/
+*.pyc
+
+# Scratch files and transient tests
+**/test-card.js
+**/screenshot.spec.js
+
+# Allow selective tracking in tests/
+**/tests/*
+!**/tests/features/
+!**/tests/support/
+!**/tests/unit/
+!**/tests/ui/
+!**/tests/e2e/
+!**/tests/integration/
+!**/tests/performance/
+!**/tests/README.md

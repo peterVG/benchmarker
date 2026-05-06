@@ -20,6 +20,6 @@ The agent MUST use standard Python docstrings (using `"""`) adhering strictly to
 These docstrings MUST be parseable by `pdoc` to generate the final developer documentation site.
 
 ### Javascript/TypeScript (Frontend) Standards
-The agent MUST use standard `JSDoc` syntax (using `/** ... */`) for all frontend logic, hooks, utility functions, and complex React/Svelte components.
+The agent MUST use standard `JSDoc` syntax (using `/** ... */`) for all frontend logic, hooks, utility functions, and complex React/Vue components.
 
 *Failure to document code according to these standards violates the core AGENTS.md manifesto.*

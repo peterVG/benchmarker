@@ -1,12 +1,53 @@
 # About this project
 
+Benchmarker is a lightweight, automated benchmarking harness designed to batch-test local AI models (specifically for OCR and text classification) across diverse hardware profiles (such as Apple Silicon and Nvidia architectures). 
+
+It replaces manual, non-reproducible testing flows by providing an automated pipeline. According to the [Software Requirements Specification (SRS)](docs/srs.md), the system automatically ingests standard industry datasets like RVL-CDIP and FUNSD via the [HuggingFace datasets library](docs/architecture/007-use-huggingface-datasets.md). The backend orchestrates batch inference exclusively against [local Ollama daemons](docs/architecture/005-use-ollama-for-execution.md) to ensure data privacy and cross-platform compatibility without cloud dependencies.
+
+As tests run, the harness collects detailed system metrics (latency, time to first token, VRAM usage) and calculates OCR/Classification accuracy against ground-truth labels. To comply with scale-to-zero and local-first architectures, all test telemetry is durably persisted into a serverless [SQLite database](docs/architecture/006-use-sqlite-for-datastore.md). Finally, a dedicated Vanilla JS frontend queries this SQLite database to generate presentation-ready HTML reports containing historical performance charts and accuracy comparisons. The behavior of the entire system is strictly verified against BDD scenarios defined in the repository's `tests/features/` folders.
+
 # Setup Development Environment
+
+### Prerequisites
+We recommend using a version manager like [mise](https://mise.jdx.dev/), [asdf](https://asdf-vm.com/), or [nvm](https://github.com/nvm-sh/nvm)/[pyenv](https://github.com/pyenv/pyenv) to manage your Node and Python versions. 
+- Python: >=3.12
+- Node.js: >=20
 
 ## Run the application
 
 ## Run tests
 
+### Backend (Python)
+To run the backend test suite, use `pytest`. Ensure you run it from within the `apps/backend/` directory with your virtual environment activated:
+```bash
+cd apps/backend
+source .venv/bin/activate
+pytest
+```
+To generate the Allure report:
+```bash
+allure serve apps/backend/tests/allure-results
+```
+
+### Frontend (Javascript)
+To run frontend unit and e2e tests, run commands from within `apps/frontend/`. First, ensure you install Playwright browsers:
+```bash
+cd apps/frontend
+npx playwright install
+```
+Then run tests (e.g. `npm run test`, `npx vitest run`).
+
 ## View logs
+
+The project uses a centralized observability stack.
+To spin up Loki, Redpanda, Promtail, Prometheus, and Grafana:
+```bash
+docker-compose up -d loki redpanda promtail prometheus grafana
+```
+To view logs:
+1. Access Grafana locally at http://localhost:3000 (Credentials: `admin`/`admin`).
+2. Connect Loki manually under `Connections -> Data sources -> Add Loki at http://loki:3100 -> Save & test`.
+3. Use the "Log browser" under the Explore tab to query Loki logs visually.
 
 ## Viewing Developer Documentation
 
