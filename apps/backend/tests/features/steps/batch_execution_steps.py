@@ -2,12 +2,13 @@ import requests
 from behave import given, when, then
 from unittest.mock import patch, MagicMock
 
-from app.modules.execution.ollama_harness import OllamaHarness, ModelUnavailableError
+from app.modules.execution.runners.ollama_runner import OllamaRunner
+from app.modules.execution.runners.base import ModelUnavailableError
 
 @given('the Ollama daemon is running locally on port 11434')
 def step_impl_daemon_running(context):
     context.base_url = "http://localhost:11434"
-    context.harness = OllamaHarness(base_url=context.base_url)
+    context.harness = OllamaRunner()
 
 @given('a dataset has been successfully ingested')
 def step_impl_dataset_ingested(context):

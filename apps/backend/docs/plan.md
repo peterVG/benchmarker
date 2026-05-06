@@ -22,7 +22,7 @@ This localized checklist dictates the implementation flow for the Backend module
 
 ## Phase 2: Execution & Metric Engines
 
-- [ ] **Task B-2.1: Ollama Batch Execution Harness**
+- [x] **Task B-2.1: Ollama Batch Execution Harness**
   - **Description:** Write the core iteration logic to pass formatted dataset items to the local Ollama API via REST HTTP calls.
   - **Estimated Time:** 3 hours
   - **Dependencies:** Task B-1.2
@@ -30,7 +30,7 @@ This localized checklist dictates the implementation flow for the Backend module
   - **Related Tests:** [`batch_execution_SRS-BENCH-002.feature`](../tests/features/batch_execution_SRS-BENCH-002.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task B-2.1. Then begin development within apps/backend/ focusing on local-first processing via the Ollama REST API (ADR 005). Invoke the @feature-writer skill for BDD scenarios. Upon completion, generate apps/backend/docs/tasks/Task-B-2.1-Walkthrough.md with SRS mappings, delete internal tracking files, check off the Markdown box locally in the appropriate docs/plan.md files, commit your changes, and push the branch to origin.`
 
-- [ ] **Task B-2.2: Metric Collection & Accuracy Validation**
+- [x] **Task B-2.2: Metric Collection & Accuracy Validation**
   - **Description:** Implement telemetry tracking (latency, tokens/sec, VRAM) and calculate accuracy scores against ground truth. Route data to SQLite.
   - **Estimated Time:** 3 hours
   - **Dependencies:** Task B-2.1

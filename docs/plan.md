@@ -30,7 +30,7 @@ This document outlines the step-by-step implementation plan for the Benchmarker 
   - **Related Tests:** [`batch_execution_SRS-BENCH-002.feature`](../apps/backend/tests/features/batch_execution_SRS-BENCH-002.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 2.1. Then begin development within apps/backend/ focusing on local-first processing via the Ollama REST API (ADR 005). Invoke the @feature-writer skill for BDD scenarios. Upon completion, generate apps/backend/docs/tasks/Task-2.1-Walkthrough.md with SRS mappings, delete internal tracking files, check off the Markdown box locally in the appropriate docs/plan.md files, commit your changes, and push the branch to origin.`
 
-- [ ] **Task 2.2: Metric Collection & Accuracy Validation**
+- [x] **Task 2.2: Metric Collection & Accuracy Validation**
   - **Description:** Implement telemetry tracking (latency, tokens/sec, VRAM) during inference and compare the final output to the ground-truth label to calculate an accuracy score. Route this data to the SQLite persistence layer.
   - **Estimated Time:** 3 hours
   - **Dependencies:** Task 2.1
