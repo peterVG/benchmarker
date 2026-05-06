@@ -6,3 +6,4 @@ locust>=2.24.0
 ruff>=0.3.0
 pdoc>=14.4.0
 datasets>=2.18.0
+requests>=2.31.0
