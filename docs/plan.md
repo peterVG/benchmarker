@@ -4,7 +4,7 @@ This document outlines the step-by-step implementation plan for the Benchmarker 
 
 ## Phase 1: Foundational Database & Ingestion (Backend)
 
-- [ ] **Task 1.1: Initialize SQLite Database & Schema**
+- [x] **Task 1.1: Initialize SQLite Database & Schema**
   - **Description:** Implement the base data layer to durably store telemetry and metrics (using Python's `sqlite3` or `SQLAlchemy`). Configure the `data/` directory to store `benchmarker.sqlite`.
   - **Estimated Time:** 2 hours
   - **Dependencies:** None
