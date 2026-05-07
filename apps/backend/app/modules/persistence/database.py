@@ -99,6 +99,51 @@ class DatabaseManager:
             logger.error(f"Database error during save_run: {e}")
             raise
 
+    def get_all_runs(self):
+        """
+        Retrieves all historical runs and calculates aggregated metrics for each run.
+        """
+        try:
+            with self._get_connection() as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                
+                # We need to join runs with metrics to get average latency and tokens_per_sec, and accuracy.
+                cursor.execute("""
+                SELECT 
+                    r.id, r.run_date, r.hardware_profile, r.model_name,
+                    COUNT(m.is_correct) as total_scored_items,
+                    AVG(m.latency_ms) as avg_latency_ms,
+                    AVG(m.tokens_per_sec) as avg_tokens_per_sec,
+                    SUM(m.is_correct) as correct_items
+                FROM runs r
+                LEFT JOIN metrics m ON r.id = m.run_id
+                GROUP BY r.id
+                ORDER BY r.run_date DESC
+                """)
+                
+                rows = cursor.fetchall()
+                runs = []
+                for row in rows:
+                    total_items = row["total_scored_items"] or 0
+                    correct_items = row["correct_items"] or 0
+                    accuracy = (correct_items / total_items * 100) if total_items > 0 else 0
+                    
+                    runs.append({
+                        "id": row["id"],
+                        "run_date": row["run_date"],
+                        "hardware_profile": row["hardware_profile"],
+                        "model_name": row["model_name"],
+                        "total_items": total_items,
+                        "avg_latency_ms": row["avg_latency_ms"],
+                        "avg_tokens_per_sec": row["avg_tokens_per_sec"],
+                        "accuracy_percent": accuracy
+                    })
+                return runs
+        except sqlite3.Error as e:
+            logger.error(f"Failed to fetch runs: {e}")
+            return []
+
     def _fallback_export(self, run_date, hardware_profile, model_name, metrics):
         Path(FALLBACK_FILE).parent.mkdir(parents=True, exist_ok=True)
         record = {
