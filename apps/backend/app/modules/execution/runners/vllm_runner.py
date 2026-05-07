@@ -51,8 +51,9 @@ class VLLMRunner(AIRunner):
         # VLLM uses Ray for multi-gpu, we restrict to single GPU for local benchmark
         env["CUDA_VISIBLE_DEVICES"] = "0"
         
+        import sys
         cmd = [
-            "python", "-m", "vllm.entrypoints.openai.api_server",
+            sys.executable, "-m", "vllm.entrypoints.openai.api_server",
             "--model", self.model_name,
             "--port", "8000" # We will use 8000. Wait, our FastAPI uses 8000!
             # Let's use 8080 for vLLM to avoid collision with FastAPI
@@ -80,11 +81,15 @@ class VLLMRunner(AIRunner):
         ready = False
         start_time = time.time()
         while time.time() - start_time < 300: # Wait up to 5 mins for large models
+            if self.process.poll() is not None:
+                raise RuntimeError("vLLM server process exited prematurely.")
             try:
                 res = requests.get("http://localhost:8080/health", timeout=2)
                 if res.status_code == 200:
                     ready = True
                     break
+                else:
+                    time.sleep(2)
             except requests.exceptions.ConnectionError:
                 time.sleep(2)
                 
@@ -185,9 +190,16 @@ class VLLMRunner(AIRunner):
 
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
-                futures = []
+                futures = set()
                 for item in dataset_stream:
-                    futures.append(executor.submit(process_item, item))
+                    if len(futures) >= concurrency * 2:
+                        done, futures = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
+                        for future in done:
+                            try:
+                                results.append(future.result())
+                            except Exception as e:
+                                console.print(f"[bold red]Item generation failed: {e}[/bold red]")
+                    futures.add(executor.submit(process_item, item))
                 
                 for future in concurrent.futures.as_completed(futures):
                     try:

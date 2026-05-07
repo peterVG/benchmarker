@@ -201,9 +201,16 @@ class OllamaRunner(AIRunner):
 
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
-                futures = []
+                futures = set()
                 for item in dataset_stream:
-                    futures.append(executor.submit(process_item, item))
+                    if len(futures) >= concurrency * 2:
+                        done, futures = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
+                        for future in done:
+                            try:
+                                results.append(future.result())
+                            except Exception as e:
+                                console.print(f"[bold red]Item generation failed: {e}[/bold red]")
+                    futures.add(executor.submit(process_item, item))
                 
                 for future in concurrent.futures.as_completed(futures):
                     try:
