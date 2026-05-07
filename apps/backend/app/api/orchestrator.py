@@ -104,7 +104,7 @@ class JobOrchestrator:
                         "latency_ms": int(processed["telemetry"]["total_latency_sec"] * 1000),
                         "tokens_per_sec": processed["telemetry"]["tokens_per_sec"],
                         "vram_usage_mb": 0,
-                        "is_correct": 1 if processed.get("accuracy", {}).get("is_exact_match", False) else 0
+                        "is_correct": 1 if processed.get("accuracy", {}).get("exact_match", False) else 0
                     }
                     self.db.save_metric(run_id, metric_data)
                     self.jobs[job_id]["results"].append(processed)

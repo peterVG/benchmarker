@@ -32,8 +32,9 @@ class VLLMRunner(AIRunner):
             import vllm
             console.print(f"[dim]vLLM already installed locally.[/dim]")
         except ImportError:
+            import sys
             console.print(f"[bold cyan]Installing vLLM via pip...[/bold cyan]")
-            subprocess.run(["pip", "install", "vllm"], check=True)
+            subprocess.run([sys.executable, "-m", "pip", "install", "vllm"], check=True)
             console.print(f"[bold green][SUCCESS] vLLM installed successfully.[/bold green]")
 
     def get_version(self) -> str:
@@ -183,7 +184,7 @@ class VLLMRunner(AIRunner):
             return res
 
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=self.concurrency) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
                 futures = []
                 for item in dataset_stream:
                     futures.append(executor.submit(process_item, item))
