@@ -58,7 +58,7 @@ This document outlines the step-by-step implementation plan for the Benchmarker 
 
 ## Phase 4: Verification & Handoff
 
-- [ ] **Task 4.1: Documentation, Dockerization & Setup Sync**
+- [x] **Task 4.1: Documentation, Dockerization & Setup Sync**
   - **Description:** Update the root `README.md` and Docker setup based on the final configuration of the testing environments.
   - **Estimated Time:** 1 hour
   - **Dependencies:** Phase 3 Complete

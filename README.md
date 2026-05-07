@@ -9,13 +9,14 @@ As tests run, the harness collects detailed system metrics (latency, time to fir
 # Setup Development Environment
 
 ### Prerequisites
+The deployment architecture is fully native (bare-metal) to ensure 100% native hardware acceleration for the embedded AI daemon (Ollama) across diverse host platforms (e.g. Apple Silicon M5, Nvidia Blackwell).
 We recommend using a version manager like [mise](https://mise.jdx.dev/), [asdf](https://asdf-vm.com/), or [nvm](https://github.com/nvm-sh/nvm)/[pyenv](https://github.com/pyenv/pyenv) to manage your Node and Python versions. 
 - Python: >=3.12
 - Node.js: >=20
 
-### Initializing the Backend
-The backend utilizes standard Python tools. Set up your virtual environment and install the required dependencies:
+### Initializing the Environment
 
+1. **Backend:** Set up your virtual environment and install the required dependencies:
 ```bash
 cd apps/backend
 python -m venv .venv
@@ -23,24 +24,31 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Run the application manually
+2. **Frontend:** Install the required Javascript dependencies:
+```bash
+cd apps/frontend
+npm install
+```
+
+## Run the application
+
 To verify the Pluggable AI Runner architecture and auto-installer logic manually:
 
-1. Ensure your virtual environment is activated (`source apps/backend/.venv/bin/activate`).
-2. Open a Python REPL from the project root:
+1. **Start the Backend:**
+Ensure your virtual environment is activated (`source apps/backend/.venv/bin/activate`).
 ```bash
-python
+cd apps/backend
+uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-3. Test the OllamaRunner installation and start process:
-```python
-from apps.backend.app.modules.execution.runners.ollama_runner import OllamaRunner
+*Note: The `OllamaRunner` will automatically download the correct Ollama binary for your host OS to `apps/backend/bin/` and start the daemon during benchmarking.*
 
-# This will auto-download the Ollama binary to /bin and start the daemon
-with OllamaRunner() as runner:
-    print("Version installed:", runner.get_version())
-    print("Checking if llama3 model exists locally:", runner.check_model("llama3"))
-    # If you want to pull a small model to test: runner.pull_model("qwen:0.5b")
+2. **Start the Frontend:**
+Open a new terminal session.
+```bash
+cd apps/frontend
+npm run dev
 ```
+Access the interactive dashboard locally at `http://localhost:5173`.
 
 ## Run tests
 
@@ -56,34 +64,74 @@ To generate the Allure report:
 allure serve apps/backend/tests/allure-results
 ```
 
-### Frontend (Javascript)
-To run frontend unit and e2e tests, run commands from within `apps/frontend/`. First, ensure you install Playwright browsers:
+### Frontend (Javascript) UI Tests
+To run frontend e2e tests, run commands from within `apps/frontend/`. First, ensure you install Playwright browsers:
 ```bash
 cd apps/frontend
 npx playwright install
 ```
-Then run tests (e.g. `npm run test`, `npx vitest run`).
+Then run tests to execute the BDD scenarios against the UI:
+```bash
+npx bddgen && npx playwright test
+```
 
 ## View logs
 
-The project uses a centralized observability stack.
-To spin up Loki, Redpanda, Promtail, Prometheus, and Grafana:
+While the application runs natively, the project uses a containerized, centralized observability stack.
+
+### Understanding the Dockerized Observability Stack
+If you are new to Docker, here is a basic overview of how it works in this project:
+- **Images & Containers:** Docker packages software into standardized units called "containers" using "images". This ensures the software runs exactly the same way regardless of your host OS.
+- **Docker Compose:** We use a `docker-compose.yml` file to orchestrate multiple containers simultaneously. 
+
+To spin up the observability containers (Loki, Redpanda, Promtail, Prometheus, and Grafana):
 ```bash
 docker-compose up -d loki redpanda promtail prometheus grafana
 ```
+*(The `-d` flag runs them in detached mode in the background).*
+
 To view logs:
 1. Access Grafana locally at http://localhost:3000 (Credentials: `admin`/`admin`).
 2. Connect Loki manually under `Connections -> Data sources -> Add Loki at http://loki:3100 -> Save & test`.
 3. Use the "Log browser" under the Explore tab to query Loki logs visually.
 
-## Viewing Developer Documentation
 
 # Setup Production Environment
 
 ## Deploy to Production
 
+In production, Benchmarker is deployed via native processes (Bare-Metal) rather than Docker to ensure the embedded Ollama daemon has unobstructed access to the host's native GPU drivers (CUDA or Metal) without virtualization overhead.
+
+1. **Build the Frontend:**
+```bash
+cd apps/frontend
+npm run build
+```
+Serve the `apps/frontend/dist` directory using a lightweight static server (e.g. `nginx`, `caddy`, or Python's `http.server`).
+
+2. **Run the Backend:**
+We recommend using a process manager like [PM2](https://pm2.keymetrics.io/) or `systemd` to keep the backend API alive. 
+```bash
+cd apps/backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pm2 start "uvicorn app.api.main:app --host 0.0.0.0 --port 8000" --name "benchmarker-api"
+```
+
 ## Monitor and Update
 
+**Centralized Logging:**
+In production, ensure your process manager routes standard output logs to the host machine's Promtail daemon, which will forward them to Redpanda and Loki.
+
+**Updates:**
+To update the system, simply pull the latest changes from Git, rebuild the frontend, install any new backend dependencies, and restart the processes:
+```bash
+git pull origin main
+cd apps/frontend && npm install && npm run build
+cd ../backend && source .venv/bin/activate && pip install -r requirements.txt
+pm2 restart benchmarker-api
+```
 ---
 
 # About Open Agent Dev
