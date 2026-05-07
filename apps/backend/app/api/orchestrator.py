@@ -79,7 +79,8 @@ class JobOrchestrator:
                 run_id = self.db.create_run(
                     run_date=datetime.utcnow().isoformat() + "Z",
                     hardware_profile="unknown", # We can add this to config later
-                    model_name=config.model_name
+                    model_name=config.model_name,
+                    runner_type=config.runner_type
                 )
 
                 # Log forwarder thread
