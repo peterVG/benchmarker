@@ -69,6 +69,14 @@ AI developers/engineers prioritizing automated dataset pipelines, precise metric
 - The UI tracks, stores, and recalls logging (stdout, stderr) from the active AI model runner daemon.
 - The implementation adheres to the project's centralized observability rules (routing streams appropriately).
 
+## F-008: Concurrent Inference Load Testing
+**Priority:** Mandatory
+**User Story:** As an AI developer, I want to test model performance under concurrent load so that I can measure continuous batching efficiency.
+### Acceptance Criteria
+- User can specify a concurrency level.
+- The orchestrator dispatches multiple simultaneous inference requests to the active AI runner.
+- The UI receives real-time metric streaming as individual concurrent requests complete.
+
 ## Technology Stack
 - **Frontend:** Interactive HTML Dashboard (Vite/Vanilla JS or framework as decided)
 - **Backend:** Python (with HuggingFace `datasets`) and an embedded, pluggable AI execution layer (managed programmatically by the script).

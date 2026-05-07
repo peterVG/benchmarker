@@ -5,6 +5,7 @@ import threading
 import queue
 import time
 import requests
+import concurrent.futures
 from typing import Generator, List, Dict, Any
 from rich.console import Console
 from .base import AIRunner, ModelUnavailableError
@@ -16,7 +17,8 @@ class OllamaRunner(AIRunner):
     Concrete implementation of the AIRunner interface for Ollama.
     Handles auto-installation, daemon lifecycle, and batch inference execution.
     """
-    def __init__(self, models_dir: str = None, bin_dir: str = None):
+    def __init__(self, models_dir: str = None, bin_dir: str = None, concurrency: int = 1):
+        self.concurrency = concurrency
         current_dir = os.path.dirname(os.path.abspath(__file__))
         # 6 levels up from current_dir to get to project root
         project_root = os.path.abspath(os.path.join(current_dir, *['..']*6))
@@ -88,6 +90,7 @@ class OllamaRunner(AIRunner):
         os.makedirs(self.models_dir, exist_ok=True)
         env = os.environ.copy()
         env['OLLAMA_MODELS'] = self.models_dir
+        env['OLLAMA_NUM_PARALLEL'] = str(self.concurrency)
         
         self.process = subprocess.Popen(
             [self.executable_path, "serve"],
@@ -166,33 +169,55 @@ class OllamaRunner(AIRunner):
         response.raise_for_status()
         return response.json()
 
-    def execute_batch(self, model_name: str, dataset_stream: Generator, prompt_template: str) -> List[Dict[str, Any]]:
+    def execute_batch(self, model_name: str, dataset_stream: Generator, prompt_template: str, concurrency: int = 1, on_result_cb = None) -> List[Dict[str, Any]]:
         results = []
         
         if not self.check_model(model_name):
             self.pull_model(model_name)
             
-        try:
-            for item in dataset_stream:
-                try:
-                    prompt = prompt_template.format(**item)
-                except KeyError:
-                    prompt = prompt_template
-                    
-                response = self.generate(model_name, prompt)
+        def process_item(item):
+            try:
+                prompt = prompt_template.format(**item)
+            except KeyError:
+                prompt = prompt_template
                 
-                results.append({
-                    "item": item,
-                    "response": response.get("response", ""),
-                    "metrics": {
-                        "eval_count": response.get("eval_count"),
-                        "eval_duration": response.get("eval_duration"),
-                        "load_duration": response.get("load_duration"),
-                        "prompt_eval_count": response.get("prompt_eval_count"),
-                        "prompt_eval_duration": response.get("prompt_eval_duration"),
-                        "total_duration": response.get("total_duration")
-                    }
-                })
+            response = self.generate(model_name, prompt)
+            
+            res = {
+                "item": item,
+                "response": response.get("response", ""),
+                "metrics": {
+                    "eval_count": response.get("eval_count"),
+                    "eval_duration": response.get("eval_duration"),
+                    "load_duration": response.get("load_duration"),
+                    "prompt_eval_count": response.get("prompt_eval_count"),
+                    "prompt_eval_duration": response.get("prompt_eval_duration"),
+                    "total_duration": response.get("total_duration")
+                }
+            }
+            if on_result_cb:
+                on_result_cb(res)
+            return res
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
+                futures = set()
+                for item in dataset_stream:
+                    if len(futures) >= concurrency * 2:
+                        done, futures = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
+                        for future in done:
+                            try:
+                                results.append(future.result())
+                            except Exception as e:
+                                console.print(f"[bold red]Item generation failed: {e}[/bold red]")
+                    futures.add(executor.submit(process_item, item))
+                
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        results.append(future.result())
+                    except Exception as e:
+                        console.print(f"[bold red]Item generation failed: {e}[/bold red]")
+                        
         except requests.exceptions.ConnectionError as e:
             console.print(f"[bold red]Error during batch execution: Connection to Ollama failed. Safely saving results obtained so far. Details: {e}[/bold red]")
         finally:
