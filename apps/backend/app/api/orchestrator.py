@@ -25,7 +25,7 @@ def detect_hardware() -> str:
         # Check for NVIDIA GPU
         subprocess.check_output(["nvidia-smi"], stderr=subprocess.STDOUT)
         return "NVIDIA CUDA"
-    except (FileNotFoundError, subprocess.CalledProcessError):
+    except Exception:
         pass
         
     return f"{sys_name} {machine} (CPU)"
