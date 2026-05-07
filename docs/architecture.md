@@ -166,8 +166,8 @@ sequenceDiagram
 *Addresses: Scalability, error handling, rate limiting, and system observation mechanisms.*
 
 ### 7.1 Scalability Constraints
-- **Known Bottlenecks:** SQLite relies on file-level locks for writing. The single local GPU bounds concurrent inference operations.
-- **Mitigation:** The system inherently runs benchmarks serially. API endpoints performing heavy database queries (`/api/runs`) are defined synchronously so FastAPI offloads them to a threadpool, preventing event-loop blocking.
+- **Known Bottlenecks:** The single local GPU bounds concurrent inference operations. SQLite relies on file-level locks for writing.
+- **Mitigation:** The system mitigates SQLite lock contention during concurrent benchmarking by utilizing Write-Ahead Logging (WAL) and streaming result writes. The backend orchestrator utilizes asynchronous threading to dispatch concurrent inference requests (up to a UI-defined limit), enabling true load testing against runners like vLLM. API endpoints performing heavy database queries (`/api/runs`) are defined synchronously so FastAPI offloads them to a threadpool, preventing event-loop blocking.
 
 ### 7.2 Observability & Monitoring
 - **Logging Subsystems:** Python applications stream logs unbuffered directly to `stdout`.
@@ -179,7 +179,7 @@ sequenceDiagram
 | **Deployment Strategy** | Native Bare-Metal | [[ADR-010](./architecture/010-native-bare-metal-deployment.md)] Required to guarantee native GPU (Metal/CUDA) access for the embedded AI daemon, as Docker Mac does not support Metal passthrough. |
 | **Frontend UI** | Vanilla JS / Vite | [[ADR-003](./architecture/003-coding-style-and-linting.md)] Minimal dependency footprint, "Glassmorphism" premium aesthetic, and zero-friction build pipeline. |
 | **Backend API** | Python / FastAPI | Follows the Python/JS Monorepo initialization; FastAPI provides asynchronous routing and WebSocket support for live log streaming. |
-| **Execution Engine** | Embedded Ollama | [[ADR-008](./architecture/008-embed-ollama-daemon.md)] Embedding the daemon prevents system conflicts and fulfills the Zero-Friction/Local-First mandates. Pluggable via [ADR-009](./architecture/009-pluggable-ai-runner-architecture.md). |
+| **Execution Engine** | Embedded Ollama / vLLM | [[ADR-008](./architecture/008-embed-ollama-daemon.md)] Embedding the daemon prevents system conflicts and fulfills the Zero-Friction/Local-First mandates. Pluggable via [ADR-009](./architecture/009-pluggable-ai-runner-architecture.md) and concurrent-capable via [ADR-011](./architecture/011-concurrent-inference-and-vllm.md). |
 | **Data Source** | HuggingFace Datasets | [[ADR-007](./architecture/007-use-huggingface-datasets.md)] Standardizes access to RVL-CDIP, FUNSD, and SROIE without custom parsers. |
-| **Telemetry Store** | SQLite | [[ADR-006](./architecture/006-use-sqlite-for-datastore.md)] Serverless, zero-friction storage perfectly suited for single-user local benchmarking tools. |
+| **Telemetry Store** | SQLite | [[ADR-006](./architecture/006-use-sqlite-for-datastore.md)] Serverless, zero-friction storage. Concurrent write safety provided via WAL ([ADR-011](./architecture/011-concurrent-inference-and-vllm.md)). |
 | **Observability** | PLG Stack + Redpanda | [[ADR-004](./architecture/004-centralized-observability.md)] Modern, robust event-streaming architecture. Containerized to separate infrastructure from the application. |

@@ -62,9 +62,10 @@ class AIRunner(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def execute_batch(self, model_name: str, dataset_stream: Generator, prompt_template: str) -> List[Dict[str, Any]]:
+    def execute_batch(self, model_name: str, dataset_stream: Generator, prompt_template: str, concurrency: int = 1, on_result_cb = None) -> List[Dict[str, Any]]:
         """
         Iterates through the dataset stream, queries the local API, and returns an array of results.
+        If on_result_cb is provided, it is called with each result as it completes.
         Should handle its own crash recovery and return partial results if connection drops.
         """
         pass

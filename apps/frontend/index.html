@@ -37,6 +37,7 @@
               <label for="runnerSelect">AI Runner</label>
               <select id="runnerSelect" required>
                 <option value="ollama">Ollama</option>
+                <option value="vllm">vLLM</option>
               </select>
             </div>
             <div class="form-group">
@@ -46,6 +47,10 @@
             <div class="form-group">
               <label for="datasetInput">Dataset ID</label>
               <input type="text" id="datasetInput" placeholder="e.g., ag_news" required />
+            </div>
+            <div class="form-group">
+              <label for="concurrencyInput">Concurrency Level</label>
+              <input type="number" id="concurrencyInput" value="1" min="1" max="64" required />
             </div>
             <button type="submit" id="runBtn" class="btn-primary">Run Benchmark</button>
           </form>

@@ -5,6 +5,7 @@ import threading
 from typing import Dict, Any, Generator
 from .schemas import RunConfiguration
 from app.modules.execution.runners.ollama_runner import OllamaRunner
+from app.modules.execution.runners.vllm_runner import VLLMRunner
 from app.modules.execution.metrics import MetricsCollector
 from app.modules.ingestion.dataset_manager import DatasetManager
 from app.modules.persistence.database import DatabaseManager
@@ -54,15 +55,25 @@ class JobOrchestrator:
 
             run_stream = limited_stream(stream, config.max_items)
             
+            # Initialize run in DB
+            self.db.initialize_schema()
+            run_id = self.db.create_run(
+                run_date=datetime.utcnow().isoformat() + "Z",
+                hardware_profile="unknown", # We can add this to config later
+                model_name=config.model_name
+            )
+
             # Select runner
             if config.runner_type.lower() == "ollama":
-                runner = OllamaRunner()
+                runner = OllamaRunner(concurrency=config.concurrency)
+            elif config.runner_type.lower() == "vllm":
+                runner = VLLMRunner(model_name=config.model_name, concurrency=config.concurrency)
             else:
                 q.put(f"[ERROR] Unsupported runner type {config.runner_type}")
                 self.jobs[job_id]["status"] = "failed"
                 return
                 
-            q.put(f"[INFO] Starting runner {config.runner_type}...")
+            q.put(f"[INFO] Starting runner {config.runner_type} with concurrency {config.concurrency}...")
             
             with runner as active_runner:
                 # Log forwarder thread
@@ -78,36 +89,33 @@ class JobOrchestrator:
                 log_thread.start()
 
                 q.put(f"[INFO] Executing batch...")
-                results = active_runner.execute_batch(config.model_name, run_stream, config.prompt_template)
                 
-                q.put(f"[INFO] Batch completed. Processing metrics...")
+                # Setup callback for streaming results
+                def handle_result(raw_res):
+                    processed = MetricsCollector.process_result(raw_res)
+                    metric_data = {
+                        "dataset_item_id": str(processed["item"].get("id", "unknown")),
+                        "latency_ms": int(processed["telemetry"]["total_latency_sec"] * 1000),
+                        "tokens_per_sec": processed["telemetry"]["tokens_per_sec"],
+                        "vram_usage_mb": 0,
+                        "is_correct": 1 if processed.get("accuracy", {}).get("is_exact_match", False) else 0
+                    }
+                    self.db.save_metric(run_id, metric_data)
+                    self.jobs[job_id]["results"].append(processed)
+                    q.put(f"[METRIC] Item complete: Latency={metric_data['latency_ms']}ms, TPS={metric_data['tokens_per_sec']:.2f}")
+
+                active_runner.execute_batch(
+                    config.model_name, 
+                    run_stream, 
+                    config.prompt_template, 
+                    concurrency=config.concurrency, 
+                    on_result_cb=handle_result
+                )
+                
+                q.put(f"[INFO] Batch completed.")
                 stop_forwarder.set()
                 log_thread.join(timeout=1)
                 
-            # Process metrics and save
-            processed_results = []
-            metrics_list = []
-            
-            for res in results:
-                processed = MetricsCollector.process_result(res)
-                metrics_list.append({
-                    "dataset_item_id": str(processed["item"].get("id", "unknown")),
-                    "latency_ms": int(processed["telemetry"]["total_latency_sec"] * 1000),
-                    "tokens_per_sec": processed["telemetry"]["tokens_per_sec"],
-                    "vram_usage_mb": 0,
-                    "is_correct": 1 if processed.get("accuracy", {}).get("is_exact_match", False) else 0
-                })
-                processed_results.append(processed)
-                
-            self.db.initialize_schema()
-            self.db.save_run(
-                run_date=datetime.utcnow().isoformat() + "Z",
-                hardware_profile="unknown", # We can add this to config later
-                model_name=config.model_name,
-                metrics=metrics_list
-            )
-            
-            self.jobs[job_id]["results"] = processed_results
             self.jobs[job_id]["status"] = "completed"
             q.put(f"[INFO] Job {job_id} completed successfully.")
             

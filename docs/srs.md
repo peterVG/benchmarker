@@ -63,6 +63,21 @@ The system MUST generate an HTML report or dashboard from the SQLite data. The r
 **Tests**
 - [`presentation_reporting_SRS-BENCH-005.feature`](../apps/frontend/tests/features/presentation_reporting_SRS-BENCH-005.feature)
 
+### SRS-BENCH-006: Concurrent Inference Load Testing
+The system MUST support dispatching concurrent inference requests to the active AI runner. The system MUST stream metric results to the persistent SQLite datastore and the frontend dashboard in real-time as individual concurrent requests complete, rather than waiting for the entire batch to finish.
+
+**Technical Implementation:**
+- Utilize an asynchronous execution pool (e.g. `ThreadPoolExecutor` or `asyncio.gather`) within the Orchestrator.
+- The UI MUST accept a concurrency level parameter.
+- The `vLLMRunner` MUST be implemented to support this concurrency optimally using continuous batching.
+- The SQLite database connection MUST use Write-Ahead Logging (WAL) and sufficient timeout configuration to avoid locking errors during rapid sequential writes.
+
+**Source**
+- `[prd.md](./prd.md)` F-008 Concurrent Inference Load Testing
+
+**Tests**
+- [`concurrent_inference_SRS-BENCH-006.feature`](../apps/backend/tests/features/concurrent_inference_SRS-BENCH-006.feature)
+
 ## 2. Non-Functional Requirements & Technical Constraints
 
 ### SRS-BENCH-NFR-001: Cross-Platform Execution
@@ -104,6 +119,7 @@ The application MUST use lightweight, mainstream tools. The database MUST use SQ
 | F-003 | SRS-BENCH-003 | Mapped |
 | F-004 | SRS-BENCH-004 | Mapped |
 | F-005 | SRS-BENCH-005 | Mapped |
+| F-008 | SRS-BENCH-006 | Mapped |
 | NFR-001 | SRS-BENCH-NFR-001 | Mapped |
 | NFR-002 | SRS-BENCH-NFR-002 | Mapped |
 | NFR-003 | SRS-BENCH-NFR-003 | Mapped |

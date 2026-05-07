@@ -148,6 +148,7 @@ async function handleRunBenchmark(event) {
   const runner = document.getElementById('runnerSelect').value;
   const model = document.getElementById('modelInput').value;
   const dataset = document.getElementById('datasetInput').value;
+  const concurrency = parseInt(document.getElementById('concurrencyInput').value, 10);
   const btn = document.getElementById('runBtn');
   
   btn.disabled = true;
@@ -163,6 +164,7 @@ async function handleRunBenchmark(event) {
         runner_type: runner,
         model_name: model,
         dataset_name: dataset,
+        concurrency: concurrency,
         max_items: 5,
         hardware_profile: 'Apple Silicon (M-Series)'
       })

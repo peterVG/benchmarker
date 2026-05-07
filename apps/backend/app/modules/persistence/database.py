@@ -54,10 +54,9 @@ class DatabaseManager:
             logger.error(f"Failed to initialize database schema: {e}")
             raise
 
-    def save_run(self, run_date, hardware_profile, model_name, metrics):
+    def create_run(self, run_date, hardware_profile, model_name):
         """
-        Save a run and its associated metrics to the database.
-        If a permission error occurs, it writes to a fallback JSON file.
+        Creates a new run entry and returns its ID.
         """
         try:
             with self._get_connection() as conn:
@@ -66,28 +65,53 @@ class DatabaseManager:
                     "INSERT INTO runs (run_date, hardware_profile, model_name) VALUES (?, ?, ?)",
                     (run_date, hardware_profile, model_name)
                 )
-                run_id = cursor.lastrowid
-
-                for metric in metrics:
-                    cursor.execute(
-                        """
-                        INSERT INTO metrics 
-                        (run_id, dataset_item_id, latency_ms, time_to_first_token_ms, tokens_per_sec, vram_usage_mb, is_correct) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                        """,
-                        (
-                            run_id,
-                            metric.get("dataset_item_id"),
-                            metric.get("latency_ms"),
-                            metric.get("time_to_first_token_ms"),
-                            metric.get("tokens_per_sec"),
-                            metric.get("vram_usage_mb"),
-                            metric.get("is_correct")
-                        )
-                    )
                 conn.commit()
-                logger.info(f"Successfully saved run {run_id} with {len(metrics)} metrics.")
+                run_id = cursor.lastrowid
+                logger.info(f"Created new run {run_id}.")
                 return run_id
+        except sqlite3.Error as e:
+            logger.error(f"Failed to create run: {e}")
+            raise
+
+    def save_metric(self, run_id, metric):
+        """
+        Save a single metric for a specific run_id.
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    INSERT INTO metrics 
+                    (run_id, dataset_item_id, latency_ms, time_to_first_token_ms, tokens_per_sec, vram_usage_mb, is_correct) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        run_id,
+                        metric.get("dataset_item_id"),
+                        metric.get("latency_ms"),
+                        metric.get("time_to_first_token_ms"),
+                        metric.get("tokens_per_sec"),
+                        metric.get("vram_usage_mb"),
+                        metric.get("is_correct")
+                    )
+                )
+                conn.commit()
+        except sqlite3.Error as e:
+            logger.error(f"Failed to save metric for run {run_id}: {e}")
+            raise
+
+    def save_run(self, run_date, hardware_profile, model_name, metrics):
+        """
+        Save a run and its associated metrics to the database.
+        If a permission error occurs, it writes to a fallback JSON file.
+        """
+        try:
+            run_id = self.create_run(run_date, hardware_profile, model_name)
+            for metric in metrics:
+                self.save_metric(run_id, metric)
+            logger.info(f"Successfully saved run {run_id} with {len(metrics)} metrics.")
+            return run_id
         except sqlite3.OperationalError as e:
             if "readonly database" in str(e) or "attempt to write a readonly database" in str(e) or "permission denied" in str(e).lower():
                 logger.warning(f"Database write permission error caught: {e}. Exporting to fallback JSON.")
