@@ -113,6 +113,7 @@ Serve the `apps/frontend/dist` directory using a lightweight static server (e.g.
 We recommend using a process manager like [PM2](https://pm2.keymetrics.io/) or `systemd` to keep the backend API alive. 
 ```bash
 cd apps/backend
+python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pm2 start "uvicorn app.api.main:app --host 0.0.0.0 --port 8000" --name "benchmarker-api"
