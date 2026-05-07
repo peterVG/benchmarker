@@ -90,7 +90,7 @@ class VLLMRunner(AIRunner):
                     break
                 else:
                     time.sleep(2)
-            except requests.exceptions.ConnectionError:
+            except requests.exceptions.RequestException:
                 time.sleep(2)
                 
         if not ready:

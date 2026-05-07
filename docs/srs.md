@@ -63,7 +63,7 @@ The system MUST generate an HTML report or dashboard from the SQLite data. The r
 **Tests**
 - [`presentation_reporting_SRS-BENCH-005.feature`](../apps/frontend/tests/features/presentation_reporting_SRS-BENCH-005.feature)
 
-### SRS-BENCH-006: Concurrent Inference Load Testing
+### SRS-BENCH-007: Concurrent Inference Load Testing
 The system MUST support dispatching concurrent inference requests to the active AI runner. The system MUST stream metric results to the persistent SQLite datastore and the frontend dashboard in real-time as individual concurrent requests complete, rather than waiting for the entire batch to finish.
 
 **Technical Implementation:**
@@ -76,7 +76,7 @@ The system MUST support dispatching concurrent inference requests to the active 
 - `[prd.md](./prd.md)` F-008 Concurrent Inference Load Testing
 
 **Tests**
-- [`concurrent_inference_SRS-BENCH-006.feature`](../apps/backend/tests/features/concurrent_inference_SRS-BENCH-006.feature)
+- [`concurrent_inference_SRS-BENCH-007.feature`](../apps/backend/tests/features/concurrent_inference_SRS-BENCH-007.feature)
 
 ## 2. Non-Functional Requirements & Technical Constraints
 

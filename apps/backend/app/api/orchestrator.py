@@ -71,17 +71,17 @@ class JobOrchestrator:
                 self.jobs[job_id]["status"] = "failed"
                 return
 
-            # Initialize run in DB only after runner is validated
-            self.db.initialize_schema()
-            run_id = self.db.create_run(
-                run_date=datetime.utcnow().isoformat() + "Z",
-                hardware_profile="unknown", # We can add this to config later
-                model_name=config.model_name
-            )
-                
             q.put(f"[INFO] Starting runner {config.runner_type} with concurrency {config.concurrency}...")
             
             with runner as active_runner:
+                # Initialize run in DB only after runner is successfully started
+                self.db.initialize_schema()
+                run_id = self.db.create_run(
+                    run_date=datetime.utcnow().isoformat() + "Z",
+                    hardware_profile="unknown", # We can add this to config later
+                    model_name=config.model_name
+                )
+
                 # Log forwarder thread
                 stop_forwarder = threading.Event()
                 def forward_logs():
@@ -106,7 +106,10 @@ class JobOrchestrator:
                         "vram_usage_mb": 0,
                         "is_correct": 1 if processed.get("accuracy", {}).get("exact_match", False) else 0
                     }
-                    self.db.save_metric(run_id, metric_data)
+                    try:
+                        self.db.save_metric(run_id, metric_data)
+                    except Exception as e:
+                        q.put(f"[ERROR] Failed to save metric: {str(e)}")
                     self.jobs[job_id]["results"].append(processed)
                     q.put(f"[METRIC] Item complete: Latency={metric_data['latency_ms']}ms, TPS={metric_data['tokens_per_sec']:.2f}")
 
