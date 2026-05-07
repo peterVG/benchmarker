@@ -43,7 +43,7 @@ AI developers/engineers prioritizing automated dataset pipelines, precise metric
 **User Story:** As an AI developer, I want to save test results to a SQLite database so that I can maintain a historical record of all benchmark runs.
 ### Acceptance Criteria
 - All metrics are written to a local SQLite database.
-- Database schema supports querying by model, hardware profile, and run date.
+- Database schema supports querying by model, runner type, hardware profile, and run date.
 *(Source: docs/product-vision.md)*
 
 ## F-005: Presentation-Ready Reporting

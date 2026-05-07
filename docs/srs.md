@@ -39,7 +39,7 @@ The system MUST track execution metrics including latency, time to first token, 
 - [`metric_collection_SRS-BENCH-003.feature`](../apps/backend/tests/features/metric_collection_SRS-BENCH-003.feature)
 
 ### SRS-BENCH-004: Persistent Storage of Results
-The system MUST write all gathered metrics and accuracy results to a local SQLite database. The schema MUST support querying by model name, hardware profile, and run date.
+The system MUST write all gathered metrics and accuracy results to a local SQLite database. The schema MUST support querying by model name, runner type, hardware profile, and run date.
 
 **Technical Implementation:**
 - Use Python's built-in `sqlite3` module or `SQLAlchemy` for structured inserts.
@@ -119,7 +119,7 @@ The application MUST use lightweight, mainstream tools. The database MUST use SQ
 | F-003 | SRS-BENCH-003 | Mapped |
 | F-004 | SRS-BENCH-004 | Mapped |
 | F-005 | SRS-BENCH-005 | Mapped |
-| F-008 | SRS-BENCH-006 | Mapped |
+| F-008 | SRS-BENCH-007 | Mapped |
 | NFR-001 | SRS-BENCH-NFR-001 | Mapped |
 | NFR-002 | SRS-BENCH-NFR-002 | Mapped |
 | NFR-003 | SRS-BENCH-NFR-003 | Mapped |

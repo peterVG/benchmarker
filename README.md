@@ -40,7 +40,7 @@ Ensure your virtual environment is activated (`source apps/backend/.venv/bin/act
 cd apps/backend
 uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-*Note: The `OllamaRunner` will automatically download the correct Ollama binary for your host OS to `apps/backend/bin/` and start the daemon during benchmarking.*
+*Note: The selected AI Runner (e.g. OllamaRunner) will automatically download the correct binary for your host OS to apps/backend/bin/ and start the daemon during benchmarking.*
 
 2. **Start the Frontend:**
 Open a new terminal session.
@@ -100,7 +100,7 @@ To view logs:
 
 ## Deploy to Production
 
-In production, Benchmarker is deployed via native processes (Bare-Metal) rather than Docker to ensure the embedded Ollama daemon has unobstructed access to the host's native GPU drivers (CUDA or Metal) without virtualization overhead.
+In production, Benchmarker is deployed via native processes (Bare-Metal) rather than Docker to ensure the embedded AI daemon has unobstructed access to the host's native GPU drivers (CUDA or Metal) without virtualization overhead.
 
 1. **Build the Frontend:**
 ```bash
