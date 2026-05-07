@@ -159,7 +159,7 @@ sequenceDiagram
 ```
 
 ### 6.2 Security Measures
-- **Network Boundaries:** The application listens locally (`0.0.0.0` or `localhost`). It is not intended for exposure to the public internet.
+- **Network Boundaries:** The application listens on `0.0.0.0` (exposing the service on all network interfaces). While this makes it accessible across the local network, it is strictly an internal tool and is not intended for exposure to the public internet without additional security controls (e.g., a firewall or reverse proxy).
 - **Data Privacy:** Because the AI runners are downloaded and executed locally on the host machine, no proprietary dataset text or model responses are ever sent over external networks.
 
 ## 7. Performance & Concurrency Viewpoint (ISO 42010)
