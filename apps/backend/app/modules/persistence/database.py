@@ -112,7 +112,7 @@ class DatabaseManager:
                 cursor.execute("""
                 SELECT 
                     r.id, r.run_date, r.hardware_profile, r.model_name,
-                    COUNT(m.id) as total_items,
+                    COUNT(m.is_correct) as total_scored_items,
                     AVG(m.latency_ms) as avg_latency_ms,
                     AVG(m.tokens_per_sec) as avg_tokens_per_sec,
                     SUM(m.is_correct) as correct_items
@@ -125,7 +125,7 @@ class DatabaseManager:
                 rows = cursor.fetchall()
                 runs = []
                 for row in rows:
-                    total_items = row["total_items"] or 0
+                    total_items = row["total_scored_items"] or 0
                     correct_items = row["correct_items"] or 0
                     accuracy = (correct_items / total_items * 100) if total_items > 0 else 0
                     

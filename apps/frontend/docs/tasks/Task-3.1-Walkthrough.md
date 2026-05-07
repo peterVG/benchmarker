@@ -21,4 +21,4 @@ The objective of this task was to create an interactive Vanilla JS frontend dash
 - Visual validation was performed to confirm the responsive layout and animations.
 
 ## UI Preview
-![Dashboard Preview](/Users/petervangarderen/.gemini/antigravity/artifacts/dashboard_preview.webp)
+(Screenshot removed for portability)

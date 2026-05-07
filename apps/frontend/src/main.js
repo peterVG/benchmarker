@@ -3,6 +3,12 @@ import Chart from 'chart.js/auto';
 // Global Chart Instance
 let metricsChartInstance = null;
 
+// Dynamic API URLs based on current host
+const host = window.location.hostname;
+const apiHost = (host === 'localhost' || host === '127.0.0.1') ? `${host}:8000` : window.location.host;
+const API_BASE_URL = `${window.location.protocol}//${apiHost}`;
+const WS_BASE_URL = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${apiHost}`;
+
 document.addEventListener('DOMContentLoaded', () => {
   initHistoricalMetrics();
   
@@ -18,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function initHistoricalMetrics() {
   try {
-    const response = await fetch('http://localhost:8000/api/runs');
+    const response = await fetch(`${API_BASE_URL}/api/runs`);
     if (!response.ok) throw new Error('Failed to fetch historical runs');
     
     const data = await response.json();
@@ -148,7 +154,7 @@ async function handleRunBenchmark(event) {
   btn.textContent = 'Starting...';
   
   try {
-    const response = await fetch('http://localhost:8000/api/run', {
+    const response = await fetch(`${API_BASE_URL}/api/run`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -193,7 +199,7 @@ async function handleRunBenchmark(event) {
  * Connects to the backend WebSocket for real-time log streaming.
  */
 function connectLogsWebSocket(jobId) {
-  const ws = new WebSocket(`ws://localhost:8000/api/logs/${jobId}`);
+  const ws = new WebSocket(`${WS_BASE_URL}/api/logs/${jobId}`);
   
   ws.onmessage = (event) => {
     appendToTerminal(event.data);

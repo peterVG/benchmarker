@@ -11,6 +11,12 @@ Given('the dashboard is loaded', async ({ page }) => {
       close() {}
     };
   });
+  await page.route('**/api/runs', async route => {
+    await route.fulfill({
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      json: { runs: [{ id: 1, run_date: "2026-05-07T00:00:00Z", avg_latency_ms: 100, avg_tokens_per_sec: 50 }] }
+    });
+  });
   await page.goto('/');
   await expect(page.locator('#app')).toBeVisible();
 });
@@ -69,6 +75,12 @@ Given('a benchmarking run has been started', async ({ page }) => {
       send() {}
       close() {}
     };
+  });
+  await page.route('**/api/runs', async route => {
+    await route.fulfill({
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      json: { runs: [{ id: 1, run_date: "2026-05-07T00:00:00Z", avg_latency_ms: 100, avg_tokens_per_sec: 50 }] }
+    });
   });
   await page.goto('/');
   await page.route('**/api/run', async route => {

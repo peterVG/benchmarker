@@ -34,7 +34,7 @@ async def get_job_status(job_id: str):
     return {"job_id": job_id, "status": orchestrator.jobs[job_id]["status"], "results_count": len(orchestrator.jobs[job_id]["results"])}
 
 @app.get("/api/runs")
-async def get_all_runs():
+def get_all_runs():
     """
     Retrieves all historical benchmarking runs and their aggregated metrics.
     """
