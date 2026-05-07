@@ -78,14 +78,23 @@ npx bddgen && npx playwright test
 ## View logs
 
 While the application runs natively, the project uses a containerized, centralized observability stack.
-To spin up Loki, Redpanda, Promtail, Prometheus, and Grafana:
+
+### Understanding the Dockerized Observability Stack
+If you are new to Docker, here is a basic overview of how it works in this project:
+- **Images & Containers:** Docker packages software into standardized units called "containers" using "images". This ensures the software runs exactly the same way regardless of your host OS.
+- **Docker Compose:** We use a `docker-compose.yml` file to orchestrate multiple containers simultaneously. 
+
+To spin up the observability containers (Loki, Redpanda, Promtail, Prometheus, and Grafana):
 ```bash
 docker-compose up -d loki redpanda promtail prometheus grafana
 ```
+*(The `-d` flag runs them in detached mode in the background).*
+
 To view logs:
 1. Access Grafana locally at http://localhost:3000 (Credentials: `admin`/`admin`).
 2. Connect Loki manually under `Connections -> Data sources -> Add Loki at http://loki:3100 -> Save & test`.
 3. Use the "Log browser" under the Explore tab to query Loki logs visually.
+
 
 # Setup Production Environment
 
