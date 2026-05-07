@@ -37,12 +37,7 @@ class DatabaseManager:
                 )
                 """)
                 
-                # Add runner_type column to existing databases if it doesn't exist
-                try:
-                    conn.execute("ALTER TABLE runs ADD COLUMN runner_type TEXT NOT NULL DEFAULT 'ollama'")
-                except sqlite3.OperationalError:
-                    pass
-                
+
                 conn.execute("""
                 CREATE TABLE IF NOT EXISTS metrics (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
