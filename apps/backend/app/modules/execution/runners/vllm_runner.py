@@ -80,7 +80,7 @@ class VLLMRunner(AIRunner):
         start_time = time.time()
         while time.time() - start_time < 300: # Wait up to 5 mins for large models
             try:
-                res = requests.get("http://localhost:8080/health")
+                res = requests.get("http://localhost:8080/health", timeout=2)
                 if res.status_code == 200:
                     ready = True
                     break
@@ -88,6 +88,8 @@ class VLLMRunner(AIRunner):
                 time.sleep(2)
                 
         if not ready:
+            if self.process:
+                self.process.terminate()
             raise RuntimeError("vLLM server failed to start within timeout.")
             
         console.print("[bold green][SUCCESS] vLLM daemon is locally available and ON.[/bold green]")
@@ -135,7 +137,8 @@ class VLLMRunner(AIRunner):
                 "prompt": prompt,
                 "max_tokens": 100,
                 "temperature": 0.0
-            }
+            },
+            timeout=120
         )
         response.raise_for_status()
         data = response.json()

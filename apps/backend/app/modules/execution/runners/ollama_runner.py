@@ -200,7 +200,7 @@ class OllamaRunner(AIRunner):
             return res
 
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=self.concurrency) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
                 futures = []
                 for item in dataset_stream:
                     futures.append(executor.submit(process_item, item))

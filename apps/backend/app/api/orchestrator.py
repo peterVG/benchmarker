@@ -55,13 +55,11 @@ class JobOrchestrator:
 
             run_stream = limited_stream(stream, config.max_items)
             
-            # Initialize run in DB
-            self.db.initialize_schema()
-            run_id = self.db.create_run(
-                run_date=datetime.utcnow().isoformat() + "Z",
-                hardware_profile="unknown", # We can add this to config later
-                model_name=config.model_name
-            )
+            # Validate concurrency
+            if config.concurrency < 1:
+                q.put(f"[ERROR] Invalid concurrency level: {config.concurrency}")
+                self.jobs[job_id]["status"] = "failed"
+                return
 
             # Select runner
             if config.runner_type.lower() == "ollama":
@@ -72,6 +70,14 @@ class JobOrchestrator:
                 q.put(f"[ERROR] Unsupported runner type {config.runner_type}")
                 self.jobs[job_id]["status"] = "failed"
                 return
+
+            # Initialize run in DB only after runner is validated
+            self.db.initialize_schema()
+            run_id = self.db.create_run(
+                run_date=datetime.utcnow().isoformat() + "Z",
+                hardware_profile="unknown", # We can add this to config later
+                model_name=config.model_name
+            )
                 
             q.put(f"[INFO] Starting runner {config.runner_type} with concurrency {config.concurrency}...")
             

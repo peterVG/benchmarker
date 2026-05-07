@@ -6,7 +6,7 @@ class RunConfiguration(BaseModel):
     dataset_name: str = Field(..., description="The HuggingFace dataset to use")
     prompt_template: str = Field(default="Classify the following text:\n{text}", description="The prompt template for generation")
     max_items: int = Field(default=10, description="Max items to process in this run")
-    concurrency: int = Field(default=1, description="Number of concurrent inference requests")
+    concurrency: int = Field(default=1, ge=1, description="Number of concurrent inference requests")
 
 class RunResponse(BaseModel):
     job_id: str

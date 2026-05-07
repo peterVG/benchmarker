@@ -8,7 +8,7 @@
    - We will refactor the `Execution Controller` to use a thread pool to dispatch concurrent asynchronous inference requests based on a UI-provided `concurrency` setting.
    - We will introduce a new `vLLMRunner` that programmatically spawns a local vLLM Python process to serve as an alternative to Ollama.
    - We will enable Write-Ahead Logging (WAL) in SQLite and stream metric results to the Database individually, ensuring these writes are pushed to the WebUI for real-time reporting.
-5. **Rationale:** This approach allows us to genuinely test parallel inference throughput while strictly adhering to our scale-to-zero, minimal dependency architecture (SQLite). By keeping the writes decoupled and using WAL mode, we avoid `database is locked` errors without needing a heavy database like PostgreSQL.
+5. **Rationale:** This approach allows us to genuinely test parallel inference throughput while strictly adhering to our scale-to-zero, minimal dependency architecture (SQLite). By keeping the writes decoupled and using WAL mode combined with connection timeouts, we mitigate write contention and avoid `database is locked` errors without needing a heavy database like PostgreSQL.
 6. **Assumptions:** 
    - The host machine has sufficient RAM/VRAM to handle multiple concurrent generations.
    - vLLM can be invoked locally via a Python subprocess just like the Ollama binary.
