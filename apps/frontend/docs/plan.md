@@ -4,7 +4,7 @@ This localized checklist dictates the implementation flow for the Frontend modul
 
 ## Phase 3: Presentation & Reporting
 
-- [ ] **Task F-3.1: Interactive Control Dashboard**
+- [x] **Task 3.1: Interactive Control Dashboard**
   - **Description:** Create an interactive UI to configure benchmark runs (select Ollama, model, HF dataset), trigger execution via the Orchestration API, stream live daemon logs, and view historical metrics from SQLite.
   - **Estimated Time:** 6 hours
   - **Dependencies:** Task B-2.3 (Backend)

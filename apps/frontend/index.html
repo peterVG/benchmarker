@@ -2,12 +2,86 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Benchmarker Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- Sidebar -->
+      <aside class="sidebar glass-panel">
+        <div class="logo">
+          <h1>Benchmarker</h1>
+          <span class="badge">v0.0.1</span>
+        </div>
+        <nav>
+          <a href="#" class="nav-item active">Dashboard</a>
+          <a href="#" class="nav-item">Settings</a>
+        </nav>
+        <div class="status-box">
+          <div class="status-indicator"></div>
+          <span id="statusIndicator">Ready</span>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content">
+        <!-- Configuration Form -->
+        <section class="config-section glass-panel">
+          <h2>Run Configuration</h2>
+          <form id="configForm">
+            <div class="form-group">
+              <label for="runnerSelect">AI Runner</label>
+              <select id="runnerSelect" required>
+                <option value="ollama">Ollama</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modelInput">Model Name</label>
+              <input type="text" id="modelInput" placeholder="e.g., llama3.2" required />
+            </div>
+            <div class="form-group">
+              <label for="datasetInput">Dataset ID</label>
+              <input type="text" id="datasetInput" placeholder="e.g., ag_news" required />
+            </div>
+            <button type="submit" id="runBtn" class="btn-primary">Run Benchmark</button>
+          </form>
+        </section>
+
+        <!-- Main Workspace (Logs and Charts) -->
+        <div class="workspace">
+          <!-- Terminal Log Viewer -->
+          <section class="terminal-section glass-panel">
+            <div class="terminal-header">
+              <span>Execution Logs</span>
+              <div class="window-controls">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+            <div id="terminal" class="terminal-body hidden">
+              <!-- Logs injected here -->
+            </div>
+            <div id="terminalPlaceholder" class="terminal-placeholder">
+              <p>Waiting for run to start...</p>
+            </div>
+          </section>
+
+          <!-- Historical Metrics Chart -->
+          <section class="chart-section glass-panel">
+            <h2>Historical Metrics</h2>
+            <div id="chartEmptyState" class="terminal-placeholder">
+              <p>No historical runs found. Run a benchmark to see metrics!</p>
+            </div>
+            <div class="chart-container">
+              <canvas id="metricsChart"></canvas>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
