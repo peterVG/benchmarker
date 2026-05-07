@@ -32,10 +32,12 @@ class DatabaseManager:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     run_date TEXT NOT NULL,
                     hardware_profile TEXT NOT NULL,
-                    model_name TEXT NOT NULL
+                    model_name TEXT NOT NULL,
+                    runner_type TEXT NOT NULL DEFAULT 'ollama'
                 )
                 """)
                 
+
                 conn.execute("""
                 CREATE TABLE IF NOT EXISTS metrics (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,7 +56,7 @@ class DatabaseManager:
             logger.error(f"Failed to initialize database schema: {e}")
             raise
 
-    def create_run(self, run_date, hardware_profile, model_name):
+    def create_run(self, run_date, hardware_profile, model_name, runner_type="ollama"):
         """
         Creates a new run entry and returns its ID.
         """
@@ -62,8 +64,8 @@ class DatabaseManager:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
-                    "INSERT INTO runs (run_date, hardware_profile, model_name) VALUES (?, ?, ?)",
-                    (run_date, hardware_profile, model_name)
+                    "INSERT INTO runs (run_date, hardware_profile, model_name, runner_type) VALUES (?, ?, ?, ?)",
+                    (run_date, hardware_profile, model_name, runner_type)
                 )
                 conn.commit()
                 run_id = cursor.lastrowid
@@ -101,13 +103,13 @@ class DatabaseManager:
             logger.error(f"Failed to save metric for run {run_id}: {e}")
             raise
 
-    def save_run(self, run_date, hardware_profile, model_name, metrics):
+    def save_run(self, run_date, hardware_profile, model_name, metrics, runner_type="ollama"):
         """
         Save a run and its associated metrics to the database.
         If a permission error occurs, it writes to a fallback JSON file.
         """
         try:
-            run_id = self.create_run(run_date, hardware_profile, model_name)
+            run_id = self.create_run(run_date, hardware_profile, model_name, runner_type)
             for metric in metrics:
                 self.save_metric(run_id, metric)
             logger.info(f"Successfully saved run {run_id} with {len(metrics)} metrics.")
@@ -115,7 +117,7 @@ class DatabaseManager:
         except sqlite3.OperationalError as e:
             if "readonly database" in str(e) or "attempt to write a readonly database" in str(e) or "permission denied" in str(e).lower():
                 logger.warning(f"Database write permission error caught: {e}. Exporting to fallback JSON.")
-                self._fallback_export(run_date, hardware_profile, model_name, metrics)
+                self._fallback_export(run_date, hardware_profile, model_name, metrics, runner_type)
             else:
                 logger.error(f"Database operational error: {e}")
                 raise
@@ -135,7 +137,7 @@ class DatabaseManager:
                 # We need to join runs with metrics to get average latency and tokens_per_sec, and accuracy.
                 cursor.execute("""
                 SELECT 
-                    r.id, r.run_date, r.hardware_profile, r.model_name,
+                    r.id, r.run_date, r.hardware_profile, r.model_name, r.runner_type,
                     COUNT(m.is_correct) as total_scored_items,
                     AVG(m.latency_ms) as avg_latency_ms,
                     AVG(m.tokens_per_sec) as avg_tokens_per_sec,
@@ -158,6 +160,7 @@ class DatabaseManager:
                         "run_date": row["run_date"],
                         "hardware_profile": row["hardware_profile"],
                         "model_name": row["model_name"],
+                        "runner_type": row["runner_type"],
                         "total_items": total_items,
                         "avg_latency_ms": row["avg_latency_ms"],
                         "avg_tokens_per_sec": row["avg_tokens_per_sec"],
@@ -168,12 +171,13 @@ class DatabaseManager:
             logger.error(f"Failed to fetch runs: {e}")
             return []
 
-    def _fallback_export(self, run_date, hardware_profile, model_name, metrics):
+    def _fallback_export(self, run_date, hardware_profile, model_name, metrics, runner_type="ollama"):
         Path(FALLBACK_FILE).parent.mkdir(parents=True, exist_ok=True)
         record = {
             "run_date": run_date,
             "hardware_profile": hardware_profile,
             "model_name": model_name,
+            "runner_type": runner_type,
             "metrics": metrics
         }
         

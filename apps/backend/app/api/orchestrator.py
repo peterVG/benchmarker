@@ -11,6 +11,25 @@ from app.modules.ingestion.dataset_manager import DatasetManager
 from app.modules.persistence.database import DatabaseManager
 from datetime import datetime
 
+import platform
+import subprocess
+
+def detect_hardware() -> str:
+    sys_name = platform.system()
+    machine = platform.machine()
+    
+    if sys_name == "Darwin" and machine == "arm64":
+        return "MacOS Apple Silicon"
+    
+    try:
+        # Check for NVIDIA GPU
+        subprocess.check_output(["nvidia-smi"], stderr=subprocess.STDOUT)
+        return "NVIDIA CUDA"
+    except Exception:
+        pass
+        
+    return f"{sys_name} {machine} (CPU)"
+
 class JobOrchestrator:
     def __init__(self):
         self.jobs = {}
@@ -78,8 +97,9 @@ class JobOrchestrator:
                 self.db.initialize_schema()
                 run_id = self.db.create_run(
                     run_date=datetime.utcnow().isoformat() + "Z",
-                    hardware_profile="unknown", # We can add this to config later
-                    model_name=config.model_name
+                    hardware_profile=detect_hardware(),
+                    model_name=config.model_name,
+                    runner_type=config.runner_type
                 )
 
                 # Log forwarder thread

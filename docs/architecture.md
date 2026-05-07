@@ -5,7 +5,7 @@
 This document provides a comprehensive architectural overview of the Benchmarker application. It maps the system’s structures and technological decisions against ISO 42010 viewpoints to satisfy stakeholder concerns regarding deployment, data handling, execution performance, and observability.
 
 ### 1.2 Scope
-This architecture covers the complete Benchmarker harness, including the Vanilla JS/Vite frontend dashboard, the Python/FastAPI orchestration backend, the embedded AI Runner daemon (Ollama), the SQLite telemetry store, and the containerized observability stack (Loki, Grafana, Redpanda).
+This architecture covers the complete Benchmarker harness, including the Vanilla JS/Vite frontend dashboard, the Python/FastAPI orchestration backend, the pluggable AI Runner daemons (Ollama, vLLM), the SQLite telemetry store, and the containerized observability stack (Loki, Grafana, Redpanda).
 
 ### 1.3 References
 - **PRD:** [PRD](./prd.md)
@@ -33,7 +33,7 @@ graph TB
     User((AI Developer)) --> Front[Benchmarker Dashboard]
     Front -->|Configure & Monitor| Back[Orchestration API]
     Back -->|Download Datasets| HF[HuggingFace Hub]
-    Back -->|Download Daemons/Models| OllamaRegistry[Ollama Registry]
+    Back -->|Download Daemons/Models| ModelRegistries[Model Registries]
     Back -->|Execute Inference| ExecDaemon[Embedded AI Daemon]
     ExecDaemon --> GPU[Native Host GPU]
 ```
@@ -87,6 +87,7 @@ erDiagram
         string run_date
         string hardware_profile
         string model_name
+        string runner_type
         string status
     }
     metrics {
@@ -116,7 +117,7 @@ graph TB
             PM2[Process Manager]
             Uvicorn[FastAPI Backend]
             Static[Lightweight Web Server]
-            Daemon[Embedded Ollama Binary]
+            Daemon[Embedded AI Daemon]
             DB[(SQLite Database)]
             ModelCache[(Local AI Models)]
         end
